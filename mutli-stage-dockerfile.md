@@ -52,6 +52,8 @@ docker buildx build \
   --build-arg COMMIT_SHA="$(git rev-parse --verify HEAD)" \
   --build-arg REPO_URL="https://github.com/your/repo" \
   --label org.opencontainers.image.revision="$(git rev-parse --verify HEAD)" \
+  --label org.opencontainers.image.source="$REPO_URL"
+  -- label org.opencontainers.image.version=$REPO_BRANCH
   -t <AWS_ACCOUNT>.dkr.ecr.<AWS_REGION>.amazonaws.com/<ECR_REPO>:$(git rev-parse --verify HEAD) \
   --push \
   .
