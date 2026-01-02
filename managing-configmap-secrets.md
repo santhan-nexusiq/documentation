@@ -302,10 +302,20 @@ Pod starts
 | Feature            | Secrets Manager   | SSM Parameter Store (Standard) |
 | ------------------ | ----------------- | ------------------------------ |
 | Cost               | ❌ Paid per secret | ✅ FREE                         |
+| Pricing            | $0.40 /secret/month | Free storage
 | Encryption         | ✅ Yes             | ✅ Yes                          |
-| IAM control        | ✅ Yes             | ✅ Yes                          |
+| IAM control        | ✅ Yes(fine-grained) | ✅ Yes                          |
 | Auto rotation      | ✅ Built-in        | ❌ Manual                       |
 | Audit logs         | ✅ Yes             | ✅ Yes                          |
-| Kubernetes support | ✅ Yes             | ✅ Yes                          |
+| Kubernetes support | ✅ Yes             | ✅ Yes                          | 
 
 * we can store 10000 parameters per AWS account 
+
+## Cost Comparison Table
+
+| Secret Manager                         | Pricing Model                        | Monthly Cost (≈120 secrets) | Yearly Cost                | Notes                                |
+| -------------------------------------- | ------------------------------------ | --------------------------- | -------------------------- | ------------------------------------ |
+| **AWS Secrets Manager**                | $0.40 per secret / month + API calls | **$48 – $50 / month**       | **$576 – $600 / year**     | Cost increases linearly with secrets |
+| **AWS SSM Parameter Store (Standard)** | Free up to 10,000 parameters         | **$0 / month**              | **$0 / year**              | No per-secret cost                   |
+| **HashiCorp Vault (Open Source)**      | Software free, infra + ops cost      | **$150 – $400 / month**     | **$1,800 – $4,800 / year** | Infra + ops effort                   |
+| **HashiCorp Vault (Enterprise)**       | License + infra                      | **$2,000+ / month**         | **$25,000+ / year**        | Large enterprises only               |
