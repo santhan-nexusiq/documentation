@@ -1,4 +1,97 @@
-GitOps Repository --
+# Configuration & Secrets Management – GitOps Approach
+## Overview
+* This project follows a GitOps-driven configuration and secrets management model using Argo CD, External Secrets Operator, and AWS SSM Parameter Store to ensure secure, scalable, and fully automated deployments in Kubernetes.
+
+* The key principle of this design is a clear separation of concerns:
+  * ConfigMaps (non-sensitive configuration) are version-controlled in Git
+  * Secrets (sensitive data) are never stored in Git and instead live in AWS SSM Parameter Store
+  * ArgoCD continuously reconciles the desired state from Git into the cluster
+  * External Secrets Operator (ESO) securely syncs secrets from AWS into Kubernetes at runtime
+
+* This approach eliminates manual kubectl apply steps, reduces configuration drift, and aligns with production-grade GitOps best practices.
+
+## Detailed Production Flow (Step-by-Step)
+```
+┌────────────────────────────┐
+│ 1. Git Commit              │
+│----------------------------│
+│ - ConfigMap YAML           │
+│ - ExternalSecret YAML      │
+│ - Application YAML         │
+└─────────────┬──────────────┘
+              |
+              v
+┌────────────────────────────┐
+│ 2. GitOps Repository       │
+│----------------------------│
+│ Single source of truth     │
+│ (No secrets stored here)   │
+└─────────────┬──────────────┘
+              |
+              v
+┌────────────────────────────┐
+│ 3. ArgoCD                  │
+│----------------------------│
+│ - Watches Git repo         │
+│ - Detects changes          │
+│ - Starts reconciliation    │
+└─────────────┬──────────────┘
+              |
+              v
+┌─────────────────────────────────────────┐
+│ 4. ArgoCD Sync Phase                     │
+│-----------------------------------------│
+│ a. Applies ConfigMap manifests           │
+│ b. Applies ExternalSecret manifests      │
+│ c. Pulls Helm chart from Helm repo       │
+│ d. Renders Kubernetes manifests          │
+└─────────────┬───────────────────────────┘
+              |
+              v
+┌─────────────────────────────────────────┐
+│ 5. Kubernetes Control Plane              │
+│-----------------------------------------│
+│ - ConfigMaps created immediately         │
+│ - ExternalSecret CRs registered          │
+└─────────────┬───────────────────────────┘
+              |
+              v
+┌─────────────────────────────────────────┐
+│ 6. External Secrets Operator (ESO)       │
+│-----------------------------------------│
+│ - Watches ExternalSecret resources       │
+│ - Reads referenced ClusterSecretStore   │
+│ - Uses IRSA for authentication           │
+└─────────────┬───────────────────────────┘
+              |
+              v
+┌─────────────────────────────────────────┐
+│ 7. AWS SSM Parameter Store               │
+│-----------------------------------------│
+│ - Encrypted SecureString parameters     │
+│ - Hierarchical path per service/env     │
+│ - IAM-controlled access                 │
+└─────────────┬───────────────────────────┘
+              |
+              v
+┌─────────────────────────────────────────┐
+│ 8. Kubernetes Secrets                   │
+│-----------------------------------------│
+│ - ESO creates native Secret objects     │
+│ - Secret names match Helm references    │
+└─────────────┬───────────────────────────┘
+              |
+              v
+┌─────────────────────────────────────────┐
+│ 9. Application Pods                     │
+│-----------------------------------------│
+│ - envFrom: configMapRef                 │
+│ - envFrom: secretRef                   │
+│ - App runs with final config            │
+└─────────────────────────────────────────┘
+```
+
+## GitOps Repository
 ```
 nexusiq-gitops/
 ├── bootstrap/
@@ -92,6 +185,7 @@ metadata:
 ArgoCD syncs automatically
 
 ## STEP 6 – Create ClusterSecretStore
+* It defines the connection to AWS SSM Parameter Store
 ```
 nexusiq-gitops/bootstrap/external-secrets/clustersecretstore.yaml
 ```
@@ -129,6 +223,7 @@ data:
 ``` 
 
 ## STEP 8 – Create ExternalSecret
+* Defines which secrets to fetch and how to create a Kubernetes Secret 
 ```
 nexusiq-gitops/apps/user-service/externalsecret.yaml
 ```
@@ -154,7 +249,8 @@ spec:
 No kubectl apply
 ArgoCD applies this 
 
-## STEP 9 – Create ArgoCD Application
+## STEP 9 – Create ArgoCD Application 
+here we have 8 different applications for each microservice
 ```
 nexusiq-gitops/apps/user-service/application.yaml
 ``` 
@@ -200,3 +296,16 @@ Kubernetes Secret created
 Pod starts
 ``` 
 
+**Note:**
+## aws ssm parameter store vs aws secrets manager
+
+| Feature            | Secrets Manager   | SSM Parameter Store (Standard) |
+| ------------------ | ----------------- | ------------------------------ |
+| Cost               | ❌ Paid per secret | ✅ FREE                         |
+| Encryption         | ✅ Yes             | ✅ Yes                          |
+| IAM control        | ✅ Yes             | ✅ Yes                          |
+| Auto rotation      | ✅ Built-in        | ❌ Manual                       |
+| Audit logs         | ✅ Yes             | ✅ Yes                          |
+| Kubernetes support | ✅ Yes             | ✅ Yes                          |
+
+* we can store 10000 parameters per AWS account 
