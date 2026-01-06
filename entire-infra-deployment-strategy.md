@@ -40,7 +40,7 @@ depends_on = [module.eks]
 ## 4. One-Command Deployment Model
 **Primary Deployment Commands**
 ```
-terraform inti
+terraform init
 terraform plan -out=tfplan
 terraform apply "tfplan"
 ```
