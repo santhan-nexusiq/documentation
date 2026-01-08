@@ -36,7 +36,7 @@
 * CloudWatch Logs ingestion: $0.50 per GB for ingestion (first tier, example US-East) and storage $0.03 per GB-month as used in AWS examples. (Region-dependent.) 
 
 * cluster Configuration: 1 cluster, 3 nodes, 3 namespaces, 5 services, 5 workloads, 16 pods, ~16 containers (ap-south-2) 
-    * Container Insights observation cost ≈ $41.00 / month
-    * CloudWatch Logs (ingest ~10 MB/pod/day) ≈ $2.40 / month
-    * storage ≈ $0.14 / month
-    * Total ≈ $43.50 / month  
+    * Container Insights observation cost ≈ $58.50 / month
+    * CloudWatch Logs (ingest ~10 MB/pod/day) ≈ $4.20 / month
+    * storage ≈ $0.25 / month
+    * Total ≈ $63.50 / month   
