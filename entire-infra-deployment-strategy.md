@@ -88,7 +88,7 @@ kubectl cluster-info
 
 #### 2.2 Node & AutoMode Validation
 ```
-kubectl get nodes
+kubectl get nodes -n <namespace>
 ```
 * Validate:
     * Nodes are Ready
@@ -96,7 +96,7 @@ kubectl get nodes
     * No `NotReady` or `SchedulingDisabled`
 
 ```
-kubectl describe node <node-name>
+kubectl describe node <node-name> -n <namespace>
 ```
 * Check:
     * Labels applied by NodeClass
@@ -152,8 +152,8 @@ kubectl top pods
 ### 4. Application Validation (End-to-End)
 #### 4.1 Deployment Validation
 ```
-kubectl get deploy
-kubectl get pods
+kubectl get deploy -n <namespace>
+kubectl get pods -n <namespace> 
 ```
 * Validate:
     * Desired replicas = available replicas
@@ -161,7 +161,7 @@ kubectl get pods
     * No image pull errors
 
 ```
-kubectl describe pod <pod-name>
+kubectl describe pod <pod-name> -n <namespace>
 ```
 * Check:
     * Correct node selection
@@ -170,7 +170,7 @@ kubectl describe pod <pod-name>
 
 #### 4.2 Service & Networking Validation
 ```
-kubectl get svc
+kubectl get svc 
 kubectl get ingress
 ```
 * Validate:
@@ -221,8 +221,66 @@ terraform apply
 **Rollback Flow**
 1. Identify last healthy state version in S3
 2. Restore that version as the current state 
-3. Run:
+    1. steps to Restore a Previous Terraform State Version
+    Check versioning:
+    ```
+    aws s3api get-bucket-versioning --bucket <state-bucket-name>
+    ```
+    Expected:
+    ```
+    {
+        "Status": "Enabled"
+    }
+    ```
+    2. List All Available State Versions
+    ```
+    aws s3api list-object-versions \
+        --bucket nexusiq-terraform-states \
+        --prefix eks/infra.tfstate
+    ```
+    This returns output like:
+    ```
+    {
+    "Versions": [
+    {
+      "VersionId": "111aaa",
+      "IsLatest": false,
+      "LastModified": "2025-01-01T10:00:00Z"
+    },
+    {
+      "VersionId": "222bbb",
+      "IsLatest": false,
+      "LastModified": "2025-01-02T12:00:00Z"
+    },
+    {
+      "VersionId": "333ccc",
+      "IsLatest": true,
+      "LastModified": "2025-01-03T09:30:00Z"
+    }
+    ]
+    }
+    ```
+    **Key Points**
+    * `IsLatest: true` → current state
+    * Choose the last known good state
+    3. Restore Using AWS CLI
+    ```
+    aws s3api copy-object \
+    --bucket <give_your_s3_bucket_name> \
+    --copy-source <give_your_s3_bucket_name>/<give_your_s3_bucket_key?versionId=<give_your_versionid> \
+    --key eks/infra.tfstate
+    ```
+    4. Verify restore
+    ```
+    aws s3api list-object-versions \
+    --bucket <give_your_s3_bucket_name> \
+    --prefix <give_your_s3_bucket_key>
+    ```
+3. Align Code with State
+After restoring state, DO NOT run apply immediately.
+**correct flow** 
 ```
+terraform init 
 terraform plan
 terraform apply
 ```
