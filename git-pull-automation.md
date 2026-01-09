@@ -28,7 +28,7 @@ We evaluated three different approaches for automating the synchronization betwe
 3. Option C — Hybrid Approach (Auto-Merge + Fallback PR)
 * The workflow first tries to auto-merge.If merge fails due to conflicts, it automatically creates a PR for manual resolution.
 
-* we opted for option B 
+**we opted for option B** 
 
 ## PR-Based Sync (Create/Update Pull Request Automatically)
 
@@ -167,7 +167,7 @@ jobs:
 
 ### Verification & Validation Steps
 
-#### Functional Validation
+#### 1. Functional Validation
 1. Push a commit to main
 2. Go to Actions tab
 3. Confirm workflow execution is successful
@@ -175,7 +175,7 @@ jobs:
     * PR should exist from main → devops-dev
     * Title should match expected format 
 
-#### Duplicate PR Prevention Test
+#### 2. Duplicate PR Prevention Test
 1. Push another commit to main
 2. Confirm:
   * No new PR created
